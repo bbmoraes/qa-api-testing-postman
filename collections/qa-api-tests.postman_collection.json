@@ -1,0 +1,893 @@
+{
+  "info": {
+    "_postman_id": "e6c6367c-ce49-496e-8311-468c9c913996",
+    "name": "PORTFÓLIO QA | Testes de API REST",
+    "description": "Projeto de estudos de QA - Bianca | QA Júnior em formação.\n\nSistema testado: JSONPlaceholder (https://jsonplaceholder.typicode.com), API REST pública e gratuita de demonstração.\n\nLimitação conhecida (documentada pelo próprio serviço): POST/PUT/PATCH/DELETE são simulados e NÃO persistem dados. A API também não valida o corpo das requisições.\n\nAntes de executar: selecione o ambiente 'JSONPlaceholder | QA' e rode a collection inteira, em ordem (há dependências entre CT-001→CT-006→CT-008 e CT-009→CT-014).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 | Usuários - consulta",
+      "description": "Consultas ao recurso /users: cenários positivos, negativos e de limite.",
+      "item": [
+        {
+          "name": "CT-001 | GET | Consultar usuário existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-001 - Cenário positivo: o usuário de id 1 existe na base de demonstração",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser um JSON válido\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "// Guardamos o corpo da resposta em uma variável para reutilizar nas verificações",
+                  "const usuario = pm.response.json();",
+                  "",
+                  "pm.test(\"Campos obrigatórios presentes (id, name, username, email, address, company)\", function () {",
+                  "    pm.expect(usuario).to.include.all.keys(\"id\", \"name\", \"username\", \"email\", \"address\", \"company\");",
+                  "});",
+                  "",
+                  "pm.test(\"Tipos de dados corretos\", function () {",
+                  "    pm.expect(usuario.id).to.be.a(\"number\");",
+                  "    pm.expect(usuario.name).to.be.a(\"string\");",
+                  "    pm.expect(usuario.email).to.be.a(\"string\");",
+                  "    pm.expect(usuario.address).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"O id retornado é o mesmo que foi solicitado (1)\", function () {",
+                  "    pm.expect(usuario.id).to.eql(1);",
+                  "});",
+                  "",
+                  "pm.test(\"E-mail tem formato válido\", function () {",
+                  "    // Expressão regular simples: texto@texto.texto",
+                  "    pm.expect(usuario.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);",
+                  "});",
+                  "",
+                  "// Integração: salvamos o id para usar no CT-006 (filtro de posts por usuário)",
+                  "pm.collectionVariables.set(\"userId\", usuario.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users/1",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-002 | GET | Consultar usuário inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-002 - Cenário negativo: o id 9999 não existe.",
+                  "// Aqui um 404 é o RESULTADO ESPERADO, ou seja, o teste passa se a API responder 404.",
+                  "pm.test(\"Status HTTP deve ser 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Corpo da resposta deve ser um objeto vazio {}\", function () {",
+                  "    pm.expect(pm.response.json()).to.eql({});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users/9999",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-003 | GET | Consultar usuário com ID não numérico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-003 - Cenário negativo: identificador inválido (texto no lugar de número)",
+                  "pm.test(\"Status HTTP deve ser 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"API não deve retornar erro de servidor (5xx)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users/abc",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-004 | GET | Consultar usuário com ID zero (limite inferior)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-004 - Teste de limite: os ids válidos vão de 1 a 10. O valor 0 fica fora do intervalo.",
+                  "pm.test(\"Status HTTP deve ser 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users/0",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-005 | GET | Listar usuários com parâmetro inesperado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-005 - Teste de limite: enviamos um parâmetro de consulta que a API não conhece.",
+                  "// Esperado: a API ignora o parâmetro e devolve a lista completa normalmente.",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const lista = pm.response.json();",
+                  "",
+                  "pm.test(\"Resposta deve ser uma lista (array)\", function () {",
+                  "    pm.expect(lista).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Lista deve conter os 10 usuários da base de demonstração\", function () {",
+                  "    pm.expect(lista).to.have.lengthOf(10);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users?parametroInexistente=teste",
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 | Posts - consulta e integração",
+      "description": "Filtros e recursos aninhados, usando dados retornados por requisições anteriores.",
+      "item": [
+        {
+          "name": "CT-006 | GET | Filtrar posts pelo usuário retornado no CT-001",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-006 - Integração entre requisições: usamos o userId salvo pelo CT-001.",
+                  "const userIdEsperado = Number(pm.collectionVariables.get(\"userId\"));",
+                  "",
+                  "pm.test(\"Pré-condição: userId foi definido pelo CT-001\", function () {",
+                  "    pm.expect(userIdEsperado).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const posts = pm.response.json();",
+                  "",
+                  "pm.test(\"Filtro retorna pelo menos 1 post\", function () {",
+                  "    pm.expect(posts.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Consistência: TODOS os posts pertencem ao usuário filtrado\", function () {",
+                  "    // .every() verifica se a condição é verdadeira para cada item da lista",
+                  "    const todosDoUsuario = posts.every(p => p.userId === userIdEsperado);",
+                  "    pm.expect(todosDoUsuario).to.be.true;",
+                  "});",
+                  "",
+                  "// Guardamos o id do primeiro post para usar no CT-008",
+                  "pm.collectionVariables.set(\"postId\", posts[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/posts?userId={{userId}}",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-007 | GET | Filtrar posts por usuário inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-007 - Cenário negativo em filtro: filtrar por usuário que não existe.",
+                  "// Em filtros, o comportamento esperado é 200 com lista vazia (e não 404).",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser uma lista vazia []\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").that.is.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/posts?userId=999",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-008 | GET | Consultar comentários de um post existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-008 - Recurso aninhado: comentários do post salvo no CT-006",
+                  "const postIdEsperado = Number(pm.collectionVariables.get(\"postId\"));",
+                  "",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const comentarios = pm.response.json();",
+                  "",
+                  "pm.test(\"Cada comentário possui postId, id, name, email e body\", function () {",
+                  "    comentarios.forEach(function (c) {",
+                  "        pm.expect(c).to.include.all.keys(\"postId\", \"id\", \"name\", \"email\", \"body\");",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Consistência: todos os comentários pertencem ao post consultado\", function () {",
+                  "    pm.expect(comentarios.every(c => c.postId === postIdEsperado)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/posts/{{postId}}/comments",
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 | Posts - criação",
+      "description": "Criação (simulada) de posts: dados válidos, ausentes, malformados e de limite.",
+      "item": [
+        {
+          "name": "CT-009 | POST | Criar post com dados válidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-009 - Cenário positivo de criação",
+                  "pm.test(\"Status HTTP deve ser 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const criado = pm.response.json();",
+                  "// pm.request.body.raw = o JSON que nós ENVIAMOS na requisição",
+                  "const enviado = JSON.parse(pm.request.body.raw);",
+                  "",
+                  "pm.test(\"API devolve os mesmos dados enviados (title, body, userId)\", function () {",
+                  "    pm.expect(criado.title).to.eql(enviado.title);",
+                  "    pm.expect(criado.body).to.eql(enviado.body);",
+                  "    pm.expect(criado.userId).to.eql(enviado.userId);",
+                  "});",
+                  "",
+                  "pm.test(\"API gera um id numérico para o novo post\", function () {",
+                  "    pm.expect(criado.id).to.be.a(\"number\");",
+                  "});",
+                  "",
+                  "// Salvamos o id gerado para testar a persistência no CT-014",
+                  "pm.collectionVariables.set(\"createdPostId\", criado.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Post criado no portfolio de QA\",\n  \"body\": \"Conteudo enviado pelo teste CT-009\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CT-010 | POST | Criar post sem campos obrigatórios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-010 - Dados ausentes. A documentação do JSONPlaceholder informa que a API é FAKE:",
+                  "// ela simula a criação e não aplica regras de validação.",
+                  "// Por isso, o comportamento esperado DOCUMENTADO é 201 (limitação conhecida, não defeito).",
+                  "pm.test(\"Status HTTP é 201 (API não valida campos - limitação documentada)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta contém apenas o id gerado, sem title/body/userId\", function () {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r).to.have.property(\"id\");",
+                  "    pm.expect(r).to.not.have.any.keys(\"title\", \"body\", \"userId\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CT-011 | POST | Criar post com JSON malformado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-011 - Dados inválidos: o corpo enviado NÃO é um JSON válido (está incompleto).",
+                  "// Requisito de teste (boa prática HTTP - RFC 9110): erro causado pelo cliente",
+                  "// deve retornar 4xx (normalmente 400 Bad Request), nunca 5xx.",
+                  "pm.test(\"Status HTTP deve ser 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta NÃO deve expor detalhes internos do servidor (stack trace)\", function () {",
+                  "    pm.expect(pm.response.text()).to.not.include(\"at JSON.parse\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"JSON sem fechamento\",\n  \"userId\": 1",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CT-012 | POST | Criar post com campos vazios (limite)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-012 - Teste de limite: title e body com texto vazio",
+                  "pm.test(\"Status HTTP é 201 (API não valida - limitação documentada)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Campos vazios são devolvidos exatamente como enviados\", function () {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.title).to.eql(\"\");",
+                  "    pm.expect(r.body).to.eql(\"\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"body\": \"\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CT-013 | POST | Criar post com título de 5.000 caracteres (limite)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Pre-request: gera um título com 5.000 letras 'A' antes de enviar",
+                  "pm.collectionVariables.set(\"tituloGrande\", \"A\".repeat(5000));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-013 - Teste de limite: valor muito grande em um campo de texto",
+                  "pm.test(\"Status HTTP deve ser 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Título devolvido mantém os 5.000 caracteres (sem truncamento)\", function () {",
+                  "    pm.expect(pm.response.json().title).to.have.lengthOf(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{tituloGrande}}\",\n  \"body\": \"Teste de limite\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/posts"
+          }
+        },
+        {
+          "name": "CT-014 | GET | Consultar post recém-criado (persistência)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-014 - Integração: tentamos buscar o post \"criado\" no CT-009.",
+                  "// A documentação avisa que nada é gravado de verdade. Então o esperado é 404.",
+                  "// Este teste COMPROVA a limitação (a API não persiste dados).",
+                  "pm.test(\"Pré-condição: createdPostId foi definido pelo CT-009\", function () {",
+                  "    pm.expect(pm.collectionVariables.get(\"createdPostId\")).to.not.be.undefined;",
+                  "});",
+                  "",
+                  "pm.test(\"Status HTTP 404: o recurso criado não foi persistido (limitação documentada)\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/posts/{{createdPostId}}",
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 | Posts - atualização, exclusão e métodos",
+      "description": "PUT, PATCH, DELETE e método não suportado.",
+      "item": [
+        {
+          "name": "CT-015 | PUT | Substituir post existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-015 - PUT substitui o recurso inteiro",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta reflete os dados enviados\", function () {",
+                  "    const r = pm.response.json();",
+                  "    const enviado = JSON.parse(pm.request.body.raw);",
+                  "    pm.expect(r).to.eql(enviado);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts/1",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"title\": \"Titulo substituido via PUT\",\n  \"body\": \"Corpo substituido\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CT-016 | PATCH | Atualizar somente o título de post existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-016 - PATCH altera só os campos enviados; os demais devem continuar iguais",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const r = pm.response.json();",
+                  "",
+                  "pm.test(\"Título foi alterado para o valor enviado\", function () {",
+                  "    pm.expect(r.title).to.eql(\"Titulo alterado via PATCH\");",
+                  "});",
+                  "",
+                  "pm.test(\"Campos não enviados foram preservados (id, userId, body)\", function () {",
+                  "    pm.expect(r.id).to.eql(1);",
+                  "    pm.expect(r.userId).to.eql(1);",
+                  "    pm.expect(r.body).to.be.a(\"string\").and.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts/1",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Titulo alterado via PATCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CT-017 | PUT | Substituir post inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-017 - Cenário negativo: tentar atualizar um post que não existe.",
+                  "// Requisito de teste (boa prática HTTP): recurso inexistente -> 404, nunca 5xx.",
+                  "pm.test(\"Status HTTP deve ser 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"API não deve retornar erro de servidor (5xx)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts/9999",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tentativa em post inexistente\",\n  \"body\": \"x\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CT-018 | DELETE | Excluir post existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-018 - Exclusão simulada (a API não apaga de verdade - limitação documentada)",
+                  "pm.test(\"Status HTTP deve ser 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Corpo da resposta é um objeto vazio {}\", function () {",
+                  "    pm.expect(pm.response.json()).to.eql({});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/posts/1",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-019 | DELETE | Excluir post inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-019 - Cenário negativo exploratório.",
+                  "// A RFC 9110 não obriga um código específico para DELETE de recurso inexistente",
+                  "// (404 é o mais comum; 200/204 também aparecem por idempotência).",
+                  "// Por isso verificamos apenas que a API NÃO quebra (sem 5xx) e registramos o código obtido.",
+                  "pm.test(\"API não deve retornar erro de servidor (5xx)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Status HTTP é 200 ou 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"CT-019 - status obtido para DELETE /posts/9999:\", pm.response.code);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/posts/9999",
+            "description": ""
+          }
+        },
+        {
+          "name": "CT-020 | POST | Usar método não suportado em recurso individual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-020 - Método não suportado: POST em /posts/1 (POST só existe em /posts).",
+                  "// Esperado: 404 Not Found ou 405 Method Not Allowed.",
+                  "pm.test(\"Status HTTP deve ser 404 ou 405\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([404, 405]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/posts/1",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"teste\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 | Reaproveitado da collection de estudos",
+      "description": "Teste original da Bianca (CT-004 da collection 'QA | Projeto de API'), renumerado.",
+      "item": [
+        {
+          "name": "CT-021 | POST | Cadastrar usuário válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CT-021 - Reaproveitado do primeiro teste da Bianca (antigo CT-004 da collection de estudos).",
+                  "// Mantivemos as verificações originais e acrescentamos a validação do id gerado.",
+                  "pm.test(\"Status deve ser 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Nome deve ser Ana Teste\", function () {",
+                  "    const dados = pm.response.json();",
+                  "    pm.expect(dados.name).to.eql(\"Ana Teste\");",
+                  "});",
+                  "",
+                  "pm.test(\"API gera um id numérico para o novo usuário\", function () {",
+                  "    pm.expect(pm.response.json().id).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "url": "{{baseUrl}}/users",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ana Teste\",\n  \"username\": \"anateste\",\n  \"email\": \"ana.teste@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// ===== Verificação comum a TODAS as requisições da collection =====",
+          "// Este script roda depois de cada resposta (nível da collection).",
+          "// Ele garante que nenhuma requisição demore mais que o limite definido no ambiente.",
+          "const limite = Number(pm.environment.get(\"maxResponseTime\") || 3000);",
+          "",
+          "pm.test(\"[Geral] Tempo de resposta abaixo de \" + limite + \" ms\", function () {",
+          "    // pm.response.responseTime = tempo (ms) que a API levou para responder",
+          "    pm.expect(pm.response.responseTime).to.be.below(limite);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "postId",
+      "value": ""
+    },
+    {
+      "key": "createdPostId",
+      "value": ""
+    },
+    {
+      "key": "tituloGrande",
+      "value": ""
+    }
+  ]
+}
