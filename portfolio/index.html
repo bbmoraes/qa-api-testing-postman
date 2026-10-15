@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Portfolio | API Testing with Postman</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a test-run report. Narrow reading column, wide table band, monospace for anything the machine produced. */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#151a23; --muted:#5b6474; --line:#dde1e8;
+  --accent:#1f5fd6; --accent-soft:#e6eefc;
+  --pass:#137a4b; --pass-soft:#dcf3e7; --fail:#c2342b; --fail-soft:#fbe3e1; --warn:#8a5a00; --warn-soft:#fbefd6;
+  --code-bg:#0f1520; --code-fg:#dbe4f3; --code-com:#8796ad;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1118; --surface:#151b25; --ink:#e7ecf4; --muted:#9aa5b8; --line:#273142;
+  --accent:#7aa7ff; --accent-soft:#1a2a47;
+  --pass:#5fd39a; --pass-soft:#123326; --fail:#ff8a80; --fail-soft:#3a1a19; --warn:#f2c46b; --warn-soft:#3a2d12;
+  --code-bg:#080b11; --code-fg:#dbe4f3; --code-com:#7d8aa0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1118; --surface:#151b25; --ink:#e7ecf4; --muted:#9aa5b8; --line:#273142;
+  --accent:#7aa7ff; --accent-soft:#1a2a47;
+  --pass:#5fd39a; --pass-soft:#123326; --fail:#ff8a80; --fail-soft:#3a1a19; --warn:#f2c46b; --warn-soft:#3a2d12;
+  --code-bg:#080b11; --code-fg:#dbe4f3; --code-com:#7d8aa0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.prose{max-width:68ch}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:700}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+.mono,code,pre{font-family:var(--f-mono)}
+.num,td.mono{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.req{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font:600 .82rem var(--f-mono);color:var(--muted);margin-bottom:22px}
+.req .m{font-size:.75rem}
+.req .url{overflow-wrap:anywhere}
+header h1{font-size:clamp(2.2rem,6vw,3.8rem);font-weight:700;letter-spacing:-.02em}
+header .by{margin-top:14px;font-size:1.05rem;color:var(--muted)}
+header .by strong{color:var(--ink);font-weight:600}
+.thesis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:32px}
+.thesis div{background:var(--surface);padding:16px 18px;display:grid;gap:2px}
+.thesis b{font:700 1.9rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+.thesis span{font-size:.85rem;color:var(--muted)}
+.thesis .bad b{color:var(--fail)}
+.note{margin-top:18px;font-size:.88rem;color:var(--muted)}
+
+nav.toc{padding-block:18px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem}
+nav.toc a{color:var(--muted);text-decoration:none}
+nav.toc a:hover{color:var(--accent)}
+nav.toc .mono{color:var(--accent);margin-right:4px}
+
+section{padding-block:56px;border-bottom:1px solid var(--line);display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+section>*{min-width:0}
+.sh{display:flex;gap:14px;align-items:baseline}
+.sh .n{font:600 .85rem var(--f-mono);color:var(--accent);letter-spacing:.04em}
+.prose p+p{margin-top:12px}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 32px}
+.facts dl{margin:0}
+.facts div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding-block:10px;border-top:1px solid var(--line)}
+.facts dt{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:3px}
+.facts dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.callout{background:var(--warn-soft);border-left:3px solid var(--warn);padding:14px 16px;border-radius:0 8px 8px 0;max-width:80ch}
+.callout b{color:var(--warn)}
+
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px}
+.type{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:8px;align-content:start}
+.type .ids{font:.78rem var(--f-mono);color:var(--muted)}
+.type p{font-size:.92rem}
+.crit{display:grid;gap:10px;max-width:80ch}
+.crit p{font-size:.95rem}
+
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:1040px;font-size:.82rem}
+th{position:sticky;top:0;background:var(--surface);text-align:left;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 10px;border-bottom:1px solid var(--line)}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.fail td:first-child{box-shadow:inset 3px 0 0 var(--fail)}
+td.t{min-width:130px}
+td.id{white-space:nowrap;font-weight:600}
+td code{display:block;margin-top:6px;font-size:.74rem;color:var(--muted);overflow-wrap:anywhere}
+.sub{display:block;font-size:.76rem;color:var(--muted);margin-top:4px}
+.m{display:inline-block;font:600 .7rem var(--f-mono);padding:2px 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.m-post{background:var(--warn-soft);color:var(--warn)}
+.m-put,.m-patch{background:var(--accent-soft);color:var(--accent)}
+.m-delete{background:var(--fail-soft);color:var(--fail)}
+.m-get{background:var(--pass-soft);color:var(--pass)}
+.st{font:600 .8rem var(--f-mono);padding:2px 7px;border-radius:4px}
+.st-2{background:var(--pass-soft);color:var(--pass)}
+.st-4{background:var(--warn-soft);color:var(--warn)}
+.st-5{background:var(--fail-soft);color:var(--fail)}
+.sit{font-weight:600;font-size:.8rem;white-space:nowrap}
+.sit-pass{color:var(--pass)}
+.sit-fail{color:var(--fail)}
+.hint{font-size:.85rem;color:var(--muted)}
+
+pre{background:var(--code-bg);color:var(--code-fg);padding:16px;border-radius:8px;overflow-x:auto;font-size:.8rem;line-height:1.55;margin:0}
+details.code{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+details.code summary{cursor:pointer;padding:14px 16px;font-size:.92rem}
+details.code summary .mono{color:var(--accent);font-weight:600;margin-right:6px}
+details.code[open] summary{border-bottom:1px solid var(--line)}
+details.code .code-h{font:600 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 16px 6px}
+details.code pre{margin:0 12px 12px}
+.codes{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+details.code{min-width:0}
+.glossary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:8px 24px;font-size:.88rem}
+.glossary code{color:var(--accent);font-size:.82rem}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat b{display:block;font:700 1.7rem/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted)}
+.stat.ok b{color:var(--pass)} .stat.ko b{color:var(--fail)}
+.strip{display:grid;grid-template-columns:repeat(21,minmax(0,1fr));gap:4px}
+.cell{font:600 .66rem var(--f-mono);text-align:center;padding:10px 0;border-radius:4px}
+.cell.ok{background:var(--pass-soft);color:var(--pass)}
+.cell.ko{background:var(--fail);color:var(--surface)}
+@media (max-width:560px){.strip{grid-template-columns:repeat(7,1fr)}}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
+.bar i{display:block}
+.bar .p{background:var(--pass)} .bar .f{background:var(--fail)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:.85rem;color:var(--muted)}
+.legend b{color:var(--ink);font-variant-numeric:tabular-nums}
+.formula{font-family:var(--f-mono);font-size:.9rem;background:var(--accent-soft);color:var(--ink);padding:12px 14px;border-radius:8px;overflow-wrap:anywhere}
+.runmeta{font-size:.85rem;color:var(--muted)}
+
+.bugs{display:grid;gap:14px}
+.bug{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px}
+.bug.confirmed{border-left:4px solid var(--fail)}
+.bug.open{border-left:4px solid var(--warn)}
+.bug .tag{font:600 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.06em}
+.bug.confirmed .tag{color:var(--fail)} .bug.open .tag{color:var(--warn)}
+.bug dl{display:grid;grid-template-columns:130px 1fr;gap:6px 14px;margin:0;font-size:.9rem}
+.bug dt{color:var(--muted)}
+.bug dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media (max-width:560px){.bug dl,.facts div{grid-template-columns:1fr;gap:2px}}
+.limits{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.limits div{border:1px dashed var(--line);border-radius:10px;padding:14px 16px;font-size:.92rem}
+.limits b{display:block;margin-bottom:4px}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
+figure{margin:0;display:grid;gap:8px;align-content:start}
+figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:8px;display:block;background:var(--surface)}
+figcaption{font-size:.82rem;color:var(--muted)}
+figcaption .mono{color:var(--accent);font-weight:600;margin-right:4px}
+
+ul.learn{margin:0;padding:0;list-style:none;display:grid;gap:14px;max-width:75ch}
+ul.learn li{padding-left:18px;border-left:2px solid var(--accent)}
+ul.learn b{display:block}
+ol.next{margin:0;padding-left:1.3em;display:grid;gap:8px;max-width:75ch}
+footer{padding-block:40px 64px;font-size:.85rem;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.cell{transition:transform .15s}.cell:hover{transform:translateY(-2px)}}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="req"><span class="m m-get">GET</span><span class="url">/portfolio/bianca/qa · Content-Type: application/json</span><span class="st st-2">200 OK</span></div>
+  <h1>QA Portfolio<br>API Testing with Postman</h1>
+  <p class="by"><strong>Bianca</strong> · QA Júnior em formação · projeto de estudos executado em 15/10/2026</p>
+  <div class="thesis">
+    <div><b>21</b><span>casos de teste executados</span></div>
+    <div><b>72</b><span>verificações automatizadas</span></div>
+    <div><b>90,5%</b><span>taxa de aprovação dos casos (19/21)</span></div>
+    <div class="bad"><b>2</b><span>defeitos reais confirmados</span></div>
+  </div>
+  <p class="note">Todos os números desta página vêm de uma única execução do Collection Runner do Postman. As capturas de tela estão na seção 08.</p>
+</header>
+
+<nav class="toc wrap" aria-label="Seções">
+  <a href="#apresentacao"><span class="mono">01</span>Apresentação</a>
+  <a href="#visao"><span class="mono">02</span>Visão geral</a>
+  <a href="#estrategia"><span class="mono">03</span>Estratégia</a>
+  <a href="#casos"><span class="mono">04</span>Casos de teste</a>
+  <a href="#automacao"><span class="mono">05</span>Automação</a>
+  <a href="#resultados"><span class="mono">06</span>Resultados</a>
+  <a href="#bugs"><span class="mono">07</span>Bugs e melhorias</a>
+  <a href="#evidencias"><span class="mono">08</span>Evidências</a>
+  <a href="#aprendizados"><span class="mono">09</span>Aprendizados</a>
+  <a href="#proximos"><span class="mono">10</span>Próximos passos</a>
+</nav>
+
+<main class="wrap">
+<section id="apresentacao">
+  <div class="sh"><span class="n">01</span><h2>Apresentação</h2></div>
+  <div class="prose">
+    <p>Estou em transição de carreira de Social Media e Operações Digitais para Quality Assurance. Na operação de conteúdo para marcas, minha rotina inclui abrir briefings, acompanhar cada demanda até a entrega, controlar prazos, revisar peças antes da publicação e montar relatórios de performance.</p>
+    <p>Nesse trabalho eu já lidava com critérios de aceite, checagem antes de liberar uma entrega, registro de problemas e leitura de indicadores. Este projeto é a primeira vez que aplico esses hábitos a software: planejei, automatizei, executei e documentei testes de uma API REST, separando com cuidado o que é defeito, o que é limitação conhecida e o que ainda depende de definição.</p>
+    <p>Este é um <strong>projeto de estudos</strong>. Ainda não tenho experiência profissional em QA.</p>
+  </div>
+</section>
+
+<section id="visao">
+  <div class="sh"><span class="n">02</span><h2>Visão geral do projeto</h2></div>
+  <div class="facts">
+    <dl>
+      <div><dt>Sistema</dt><dd>JSONPlaceholder, API REST pública e gratuita de demonstração (<a href="https://jsonplaceholder.typicode.com" target="_blank" rel="noopener">jsonplaceholder.typicode.com</a>)</dd></div>
+      <div><dt>Objetivo</dt><dd>Validar status HTTP, contrato JSON, tratamento de erros e consistência entre requisições</dd></div>
+      <div><dt>Escopo</dt><dd><code>/users</code>, <code>/posts</code>, <code>/posts/{id}/comments</code> · GET, POST, PUT, PATCH, DELETE</dd></div>
+    </dl>
+    <dl>
+      <div><dt>Ferramentas</dt><dd>Postman (web), Collection Runner, JavaScript (<code>pm.test</code> e Chai)</dd></div>
+      <div><dt>Ambiente</dt><dd><code>JSONPlaceholder | QA</code> · variáveis <code>baseUrl</code> e <code>maxResponseTime = 3000</code></dd></div>
+      <div><dt>Fora do escopo</dt><dd>Carga e desempenho, segurança aprofundada, autenticação (a API não tem)</dd></div>
+    </dl>
+  </div>
+  <div class="callout"><b>Limitações conhecidas.</b> A própria documentação do JSONPlaceholder informa que criação, alteração e exclusão são <em>simuladas</em>: nada é gravado. A API também não valida o corpo das requisições. Essas limitações foram comprovadas por testes (CT-010, CT-012, CT-014) e não são apresentadas como defeitos.</div>
+</section>
+
+<section id="estrategia">
+  <div class="sh"><span class="n">03</span><h2>Estratégia de testes</h2></div>
+  <p class="prose">Os cenários foram escolhidos depois de uma exploração inicial da API. Cada método HTTP tem pelo menos um caminho feliz e um caminho de erro, e os limites cobrem identificadores, tamanho de campo e parâmetros inesperados.</p>
+  <div class="types">
+    <div class="type"><h3>Positivos</h3><p>Consulta, criação, substituição, atualização parcial e exclusão válidas.</p><span class="ids">CT-001 · 009 · 015 · 016 · 018 · 021</span></div>
+    <div class="type"><h3>Negativos</h3><p>Id inexistente ou inválido, corpo vazio ou malformado, método não suportado.</p><span class="ids">CT-002 · 003 · 007 · 010 · 011 · 017 · 019 · 020</span></div>
+    <div class="type"><h3>Limite</h3><p>Id 0 (abaixo do intervalo 1–10), parâmetro desconhecido, campos vazios, título com 5.000 caracteres.</p><span class="ids">CT-004 · 005 · 012 · 013</span></div>
+    <div class="type"><h3>Integração</h3><p>O dado devolvido por uma requisição vira a entrada da próxima: userId → posts → comentários; post criado → consulta.</p><span class="ids">CT-006 · 008 · 014</span></div>
+  </div>
+  <div class="crit">
+    <p><strong>Critério de aprovação.</strong> Um caso é aprovado quando <em>todas</em> as suas verificações passam. Um 404 em cenário negativo é sucesso, e não falha.</p>
+    <p><strong>Requisito para erros.</strong> Como a API não documenta um contrato de erros, os cenários negativos usam a semântica HTTP da RFC 9110: erro causado pelo cliente → 4xx; nenhuma resposta pode expor detalhes internos do servidor.</p>
+    <p><strong>Verificação em todas as requisições.</strong> Um script no nível da collection confere, em cada resposta, se o tempo ficou abaixo de <code>maxResponseTime</code>.</p>
+  </div>
+</section>
+
+<section id="casos">
+  <div class="sh"><span class="n">04</span><h2>Casos de teste</h2></div>
+  <p class="hint">Resultados copiados da tela do Collection Runner. Os tempos variam a cada execução. Em telas estreitas, a tabela rola para os lados.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>ID</th><th>Método</th><th>Cenário e endpoint</th><th>Entrada</th><th>Resultado esperado</th><th>Resultado obtido</th><th>Status · tempo</th><th>Verif.</th><th>Situação</th></tr></thead>
+    <tbody><tr class="pass">
+<td class="mono id">CT-001</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Consultar usuário existente</strong><span class="sub">Positivo · Usuários</span><code>{{baseUrl}}/users/1</code></td>
+<td class="t">id = 1</td>
+<td class="t">200 OK; JSON com id, name, username, email, address, company; tipos corretos; id = 1; e-mail em formato válido.</td>
+<td class="t">200 OK com o usuário id 1; todos os campos e tipos conforme esperado. userId salvo para o CT-006.</td>
+<td><span class="st st-2">200</span><span class="sub mono">824 ms</span></td>
+<td class="mono num">7/7</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-002</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Consultar usuário inexistente</strong><span class="sub">Negativo · Usuários</span><code>{{baseUrl}}/users/9999</code></td>
+<td class="t">id = 9999</td>
+<td class="t">404 Not Found com corpo {}.</td>
+<td class="t">404 Not Found com corpo {}.</td>
+<td><span class="st st-4">404</span><span class="sub mono">258 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-003</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Consultar usuário com ID não numérico</strong><span class="sub">Negativo · Usuários</span><code>{{baseUrl}}/users/abc</code></td>
+<td class="t">id = &quot;abc&quot;</td>
+<td class="t">404 Not Found; nenhum 5xx.</td>
+<td class="t">404 Not Found.</td>
+<td><span class="st st-4">404</span><span class="sub mono">279 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-004</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Consultar usuário com ID zero (limite inferior)</strong><span class="sub">Limite · Usuários</span><code>{{baseUrl}}/users/0</code></td>
+<td class="t">id = 0</td>
+<td class="t">404 Not Found.</td>
+<td class="t">404 Not Found.</td>
+<td><span class="st st-4">404</span><span class="sub mono">684 ms</span></td>
+<td class="mono num">2/2</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-005</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Listar usuários com parâmetro inesperado</strong><span class="sub">Limite · Usuários</span><code>{{baseUrl}}/users?parametroInexistente=teste</code></td>
+<td class="t">parametroInexistente=teste</td>
+<td class="t">200 OK; array com os 10 usuários.</td>
+<td class="t">200 OK; array com 10 usuários.</td>
+<td><span class="st st-2">200</span><span class="sub mono">272 ms</span></td>
+<td class="mono num">4/4</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-006</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Filtrar posts pelo usuário retornado no CT-001</strong><span class="sub">Integração · Posts – consulta</span><code>{{baseUrl}}/posts?userId={{userId}}</code></td>
+<td class="t">userId = 1 (vindo do CT-001)</td>
+<td class="t">200 OK; lista não vazia; todos os itens com userId = 1.</td>
+<td class="t">200 OK; 10 posts, todos com userId = 1. postId salvo para o CT-008.</td>
+<td><span class="st st-2">200</span><span class="sub mono">245 ms</span></td>
+<td class="mono num">5/5</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-007</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Filtrar posts por usuário inexistente</strong><span class="sub">Negativo · Posts – consulta</span><code>{{baseUrl}}/posts?userId=999</code></td>
+<td class="t">userId = 999</td>
+<td class="t">200 OK com [].</td>
+<td class="t">200 OK com [].</td>
+<td><span class="st st-2">200</span><span class="sub mono">431 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-008</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Consultar comentários de um post existente</strong><span class="sub">Integração · Posts – consulta</span><code>{{baseUrl}}/posts/{{postId}}/comments</code></td>
+<td class="t">postId = 1 (vindo do CT-006)</td>
+<td class="t">200 OK; cada comentário com postId, id, name, email, body; todos com postId = 1.</td>
+<td class="t">200 OK; estrutura e consistência conforme esperado.</td>
+<td><span class="st st-2">200</span><span class="sub mono">222 ms</span></td>
+<td class="mono num">4/4</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-009</td>
+<td><span class="m m-post">POST</span></td>
+<td class="t"><strong>Criar post com dados válidos</strong><span class="sub">Positivo · Posts – criação</span><code>{{baseUrl}}/posts</code></td>
+<td class="t">title, body, userId = 1</td>
+<td class="t">201 Created; title/body/userId iguais aos enviados; id numérico.</td>
+<td class="t">201 Created; dados ecoados; id = 101 (salvo para o CT-014).</td>
+<td><span class="st st-2">201</span><span class="sub mono">258 ms</span></td>
+<td class="mono num">4/4</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-010</td>
+<td><span class="m m-post">POST</span></td>
+<td class="t"><strong>Criar post sem campos obrigatórios</strong><span class="sub">Negativo · Posts – criação</span><code>{{baseUrl}}/posts</code></td>
+<td class="t">{}</td>
+<td class="t">201 Created contendo só o id (a API declara não validar dados).</td>
+<td class="t">201 Created; corpo { &quot;id&quot;: 101 }.</td>
+<td><span class="st st-2">201</span><span class="sub mono">266 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Limitação conhecida da API</span></td>
+</tr><tr class="fail">
+<td class="mono id">CT-011</td>
+<td><span class="m m-post">POST</span></td>
+<td class="t"><strong>Criar post com JSON malformado</strong><span class="sub">Negativo · Posts – criação</span><code>{{baseUrl}}/posts</code></td>
+<td class="t">JSON sem a chave de fechamento</td>
+<td class="t">400 Bad Request, sem expor detalhes internos do servidor.</td>
+<td class="t">500 Internal Server Error com stack trace (SyntaxError at JSON.parse… /app/node_modules/body-parser/…).</td>
+<td><span class="st st-5">500</span><span class="sub mono">235 ms</span></td>
+<td class="mono num">1/3</td>
+<td><span class="sit sit-fail">Reprovado</span><span class="sub">Defeito confirmado → BUG-001</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-012</td>
+<td><span class="m m-post">POST</span></td>
+<td class="t"><strong>Criar post com campos vazios (limite)</strong><span class="sub">Limite · Posts – criação</span><code>{{baseUrl}}/posts</code></td>
+<td class="t">title = &quot;&quot;, body = &quot;&quot;</td>
+<td class="t">201 Created ecoando os campos vazios (sem validação).</td>
+<td class="t">201 Created; title e body vazios ecoados.</td>
+<td><span class="st st-2">201</span><span class="sub mono">296 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Limitação conhecida da API</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-013</td>
+<td><span class="m m-post">POST</span></td>
+<td class="t"><strong>Criar post com título de 5.000 caracteres (limite)</strong><span class="sub">Limite · Posts – criação</span><code>{{baseUrl}}/posts</code></td>
+<td class="t">title = 5.000 × &quot;A&quot;</td>
+<td class="t">201 Created; title com 5.000 caracteres.</td>
+<td class="t">201 Created; title com 5.000 caracteres.</td>
+<td><span class="st st-2">201</span><span class="sub mono">411 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-014</td>
+<td><span class="m m-get">GET</span></td>
+<td class="t"><strong>Consultar post recém-criado (persistência)</strong><span class="sub">Integração · Posts – criação</span><code>{{baseUrl}}/posts/{{createdPostId}}</code></td>
+<td class="t">createdPostId = 101</td>
+<td class="t">404 Not Found (a documentação informa que nada é persistido).</td>
+<td class="t">404 Not Found – confirmado que a API não persiste dados.</td>
+<td><span class="st st-4">404</span><span class="sub mono">182 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Limitação conhecida da API</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-015</td>
+<td><span class="m m-put">PUT</span></td>
+<td class="t"><strong>Substituir post existente</strong><span class="sub">Positivo · Posts – alteração</span><code>{{baseUrl}}/posts/1</code></td>
+<td class="t">id, title, body, userId</td>
+<td class="t">200 OK; resposta igual ao corpo enviado.</td>
+<td class="t">200 OK; resposta idêntica ao corpo enviado.</td>
+<td><span class="st st-2">200</span><span class="sub mono">573 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-016</td>
+<td><span class="m m-patch">PATCH</span></td>
+<td class="t"><strong>Atualizar somente o título de post existente</strong><span class="sub">Positivo · Posts – alteração</span><code>{{baseUrl}}/posts/1</code></td>
+<td class="t">title</td>
+<td class="t">200 OK; title alterado; id, userId e body preservados.</td>
+<td class="t">200 OK; title alterado e demais campos preservados.</td>
+<td><span class="st st-2">200</span><span class="sub mono">226 ms</span></td>
+<td class="mono num">4/4</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="fail">
+<td class="mono id">CT-017</td>
+<td><span class="m m-put">PUT</span></td>
+<td class="t"><strong>Substituir post inexistente</strong><span class="sub">Negativo · Posts – alteração</span><code>{{baseUrl}}/posts/9999</code></td>
+<td class="t">title, body, userId</td>
+<td class="t">404 Not Found; nenhum 5xx.</td>
+<td class="t">500 Internal Server Error com stack trace (TypeError: Cannot read properties of undefined (reading &#x27;id&#x27;) … json-server/lib/server/router/plural.js).</td>
+<td><span class="st st-5">500</span><span class="sub mono">276 ms</span></td>
+<td class="mono num">1/3</td>
+<td><span class="sit sit-fail">Reprovado</span><span class="sub">Defeito confirmado → BUG-002</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-018</td>
+<td><span class="m m-delete">DELETE</span></td>
+<td class="t"><strong>Excluir post existente</strong><span class="sub">Positivo · Posts – exclusão</span><code>{{baseUrl}}/posts/1</code></td>
+<td class="t">—</td>
+<td class="t">200 OK com corpo {}.</td>
+<td class="t">200 OK com corpo {}.</td>
+<td><span class="st st-2">200</span><span class="sub mono">223 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado (exclusão simulada)</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-019</td>
+<td><span class="m m-delete">DELETE</span></td>
+<td class="t"><strong>Excluir post inexistente</strong><span class="sub">Negativo · Posts – exclusão</span><code>{{baseUrl}}/posts/9999</code></td>
+<td class="t">—</td>
+<td class="t">Sem 5xx; status 200 ou 404 (RFC 9110 não fixa o código).</td>
+<td class="t">200 OK.</td>
+<td><span class="st st-2">200</span><span class="sub mono">206 ms</span></td>
+<td class="mono num">3/3</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Possível defeito não confirmado → OBS-001</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-020</td>
+<td><span class="m m-post">POST</span></td>
+<td class="t"><strong>Usar método não suportado em recurso individual</strong><span class="sub">Negativo · Posts – métodos</span><code>{{baseUrl}}/posts/1</code></td>
+<td class="t">title</td>
+<td class="t">404 ou 405.</td>
+<td class="t">404 Not Found com corpo {}.</td>
+<td><span class="st st-4">404</span><span class="sub mono">241 ms</span></td>
+<td class="mono num">2/2</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr><tr class="pass">
+<td class="mono id">CT-021</td>
+<td><span class="m m-post">POST</span></td>
+<td class="t"><strong>Cadastrar usuário válido</strong><span class="sub">Positivo · Reaproveitado</span><code>{{baseUrl}}/users</code></td>
+<td class="t">name = Ana Teste, username, email</td>
+<td class="t">201 Created; name = &quot;Ana Teste&quot;; id numérico.</td>
+<td class="t">201 Created; name = &quot;Ana Teste&quot;; id numérico.</td>
+<td><span class="st st-2">201</span><span class="sub mono">428 ms</span></td>
+<td class="mono num">4/4</td>
+<td><span class="sit sit-pass">Aprovado</span><span class="sub">Comportamento esperado</span></td>
+</tr></tbody>
+  </table></div>
+</section>
+
+<section id="automacao">
+  <div class="sh"><span class="n">05</span><h2>Automação com Postman</h2></div>
+  <p class="prose">Os testes ficam em <strong>Scripts › Post-response</strong> e rodam assim que a resposta chega. Cada <code>pm.test</code> é uma verificação com nome próprio, que aparece como PASS ou FAIL no Runner. Todos os scripts têm comentários em português.</p>
+  <div class="codes">
+    <details class="code" open><summary><span class="mono">Collection</span> Script que roda em todas as 21 requisições: limite de tempo de resposta</summary><pre><code>// ===== Verificação comum a TODAS as requisições da collection =====
+// Este script roda depois de cada resposta (nível da collection).
+// Ele garante que nenhuma requisição demore mais que o limite definido no ambiente.
+const limite = Number(pm.environment.get(&quot;maxResponseTime&quot;) || 3000);
+
+pm.test(&quot;[Geral] Tempo de resposta abaixo de &quot; + limite + &quot; ms&quot;, function () {
+    // pm.response.responseTime = tempo (ms) que a API levou para responder
+    pm.expect(pm.response.responseTime).to.be.below(limite);
+});</code></pre></details>
+    <details class="code"><summary><span class="mono">CT-001</span> Valida status, formato JSON, campos obrigatórios, tipos, valor do id e formato do e-mail. Ao final, salva o userId para outro teste.</summary><div class="code-h">Post-response</div><pre><code>// CT-001 - Cenário positivo: o usuário de id 1 existe na base de demonstração
+pm.test(&quot;Status HTTP deve ser 200 OK&quot;, function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test(&quot;Resposta deve ser um JSON válido&quot;, function () {
+    pm.response.to.be.json;
+});
+
+// Guardamos o corpo da resposta em uma variável para reutilizar nas verificações
+const usuario = pm.response.json();
+
+pm.test(&quot;Campos obrigatórios presentes (id, name, username, email, address, company)&quot;, function () {
+    pm.expect(usuario).to.include.all.keys(&quot;id&quot;, &quot;name&quot;, &quot;username&quot;, &quot;email&quot;, &quot;address&quot;, &quot;company&quot;);
+});
+
+pm.test(&quot;Tipos de dados corretos&quot;, function () {
+    pm.expect(usuario.id).to.be.a(&quot;number&quot;);
+    pm.expect(usuario.name).to.be.a(&quot;string&quot;);
+    pm.expect(usuario.email).to.be.a(&quot;string&quot;);
+    pm.expect(usuario.address).to.be.an(&quot;object&quot;);
+});
+
+pm.test(&quot;O id retornado é o mesmo que foi solicitado (1)&quot;, function () {
+    pm.expect(usuario.id).to.eql(1);
+});
+
+pm.test(&quot;E-mail tem formato válido&quot;, function () {
+    // Expressão regular simples: texto@texto.texto
+    pm.expect(usuario.email).to.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+});
+
+// Integração: salvamos o id para usar no CT-006 (filtro de posts por usuário)
+pm.collectionVariables.set(&quot;userId&quot;, usuario.id);</code></pre></details><details class="code"><summary><span class="mono">CT-006</span> Teste de integração: lê a variável criada pelo CT-001 e confere se o filtro devolve somente posts daquele usuário.</summary><div class="code-h">Post-response</div><pre><code>// CT-006 - Integração entre requisições: usamos o userId salvo pelo CT-001.
+const userIdEsperado = Number(pm.collectionVariables.get(&quot;userId&quot;));
+
+pm.test(&quot;Pré-condição: userId foi definido pelo CT-001&quot;, function () {
+    pm.expect(userIdEsperado).to.be.above(0);
+});
+
+pm.test(&quot;Status HTTP deve ser 200 OK&quot;, function () {
+    pm.response.to.have.status(200);
+});
+
+const posts = pm.response.json();
+
+pm.test(&quot;Filtro retorna pelo menos 1 post&quot;, function () {
+    pm.expect(posts.length).to.be.above(0);
+});
+
+pm.test(&quot;Consistência: TODOS os posts pertencem ao usuário filtrado&quot;, function () {
+    // .every() verifica se a condição é verdadeira para cada item da lista
+    const todosDoUsuario = posts.every(p =&gt; p.userId === userIdEsperado);
+    pm.expect(todosDoUsuario).to.be.true;
+});
+
+// Guardamos o id do primeiro post para usar no CT-008
+pm.collectionVariables.set(&quot;postId&quot;, posts[0].id);</code></pre></details><details class="code"><summary><span class="mono">CT-011</span> Teste negativo: define o requisito (4xx e nenhum detalhe interno exposto). Foi este teste que encontrou o BUG-001.</summary><div class="code-h">Post-response</div><pre><code>// CT-011 - Dados inválidos: o corpo enviado NÃO é um JSON válido (está incompleto).
+// Requisito de teste (boa prática HTTP - RFC 9110): erro causado pelo cliente
+// deve retornar 4xx (normalmente 400 Bad Request), nunca 5xx.
+pm.test(&quot;Status HTTP deve ser 400 Bad Request&quot;, function () {
+    pm.response.to.have.status(400);
+});
+
+pm.test(&quot;Resposta NÃO deve expor detalhes internos do servidor (stack trace)&quot;, function () {
+    pm.expect(pm.response.text()).to.not.include(&quot;at JSON.parse&quot;);
+});</code></pre></details><details class="code"><summary><span class="mono">CT-013</span> Teste de limite: um script Pre-request gera 5.000 caracteres antes do envio, e o Post-response confere que nada foi truncado.</summary><div class="code-h">Pre-request</div><pre><code>// Pre-request: gera um título com 5.000 letras &#x27;A&#x27; antes de enviar
+pm.collectionVariables.set(&quot;tituloGrande&quot;, &quot;A&quot;.repeat(5000));</code></pre><div class="code-h">Post-response</div><pre><code>// CT-013 - Teste de limite: valor muito grande em um campo de texto
+pm.test(&quot;Status HTTP deve ser 201 Created&quot;, function () {
+    pm.response.to.have.status(201);
+});
+
+pm.test(&quot;Título devolvido mantém os 5.000 caracteres (sem truncamento)&quot;, function () {
+    pm.expect(pm.response.json().title).to.have.lengthOf(5000);
+});</code></pre></details>
+  </div>
+  <div class="glossary">
+    <p><code>pm.response.to.have.status(n)</code> confere o código HTTP</p>
+    <p><code>pm.expect(obj).to.include.all.keys(...)</code> confere se os campos obrigatórios existem</p>
+    <p><code>pm.expect(v).to.be.a("number")</code> confere o tipo do dado</p>
+    <p><code>.to.be.oneOf([404, 405])</code> aceita mais de um resultado válido</p>
+    <p><code>pm.collectionVariables.set(...)</code> guarda um dado para a próxima requisição</p>
+    <p><code>pm.response.responseTime</code> é o tempo de resposta, em ms</p>
+  </div>
+</section>
+
+<section id="resultados">
+  <div class="sh"><span class="n">06</span><h2>Resultados da execução</h2></div>
+  <p class="runmeta">Collection Runner · 15/10/2026, 11:03:44 (horário de Brasília) · ambiente JSONPlaceholder | QA · 1 iteração · duração 8s 233ms · tempo médio de resposta 335 ms</p>
+  <div class="stats">
+    <div class="stat"><b>21</b><span>planejados</span></div>
+    <div class="stat"><b>21</b><span>executados</span></div>
+    <div class="stat ok"><b>19</b><span>aprovados</span></div>
+    <div class="stat ko"><b>2</b><span>reprovados</span></div>
+    <div class="stat"><b>0</b><span>bloqueados</span></div>
+    <div class="stat"><b>0</b><span>não executados</span></div>
+  </div>
+  <div>
+    <h3 style="margin-bottom:10px">Casos, na ordem de execução</h3>
+    <div class="strip" role="img" aria-label="19 casos aprovados e 2 reprovados: CT-011 e CT-017"><span class="cell ok" title="CT-001 · Aprovado">001</span><span class="cell ok" title="CT-002 · Aprovado">002</span><span class="cell ok" title="CT-003 · Aprovado">003</span><span class="cell ok" title="CT-004 · Aprovado">004</span><span class="cell ok" title="CT-005 · Aprovado">005</span><span class="cell ok" title="CT-006 · Aprovado">006</span><span class="cell ok" title="CT-007 · Aprovado">007</span><span class="cell ok" title="CT-008 · Aprovado">008</span><span class="cell ok" title="CT-009 · Aprovado">009</span><span class="cell ok" title="CT-010 · Aprovado">010</span><span class="cell ko" title="CT-011 · Reprovado">011</span><span class="cell ok" title="CT-012 · Aprovado">012</span><span class="cell ok" title="CT-013 · Aprovado">013</span><span class="cell ok" title="CT-014 · Aprovado">014</span><span class="cell ok" title="CT-015 · Aprovado">015</span><span class="cell ok" title="CT-016 · Aprovado">016</span><span class="cell ko" title="CT-017 · Reprovado">017</span><span class="cell ok" title="CT-018 · Aprovado">018</span><span class="cell ok" title="CT-019 · Aprovado">019</span><span class="cell ok" title="CT-020 · Aprovado">020</span><span class="cell ok" title="CT-021 · Aprovado">021</span></div>
+  </div>
+  <div style="display:grid;gap:10px">
+    <h3>Verificações automatizadas</h3>
+    <div class="bar" role="img" aria-label="68 de 72 verificações aprovadas"><i class="p" style="width:94.444%"></i><i class="f" style="width:5.556%"></i></div>
+    <div class="legend"><span><b>68</b> aprovadas</span><span><b>4</b> reprovadas</span><span><b>0</b> ignoradas</span><span><b>0</b> erros de script</span><span>total <b>72</b> (51 nas requisições + 21 da verificação de tempo da collection)</span></div>
+  </div>
+  <p class="formula">Taxa de aprovação dos casos = aprovados ÷ executados = 19 ÷ 21 = 90,5%</p>
+  <p class="hint">O denominador são os 21 casos executados. A taxa por verificação (68 ÷ 72) não é usada como indicador principal, porque casos com muitas verificações pesariam mais no resultado.</p>
+</section>
+
+<section id="bugs">
+  <div class="sh"><span class="n">07</span><h2>Bugs e melhorias</h2></div>
+  <div class="bugs">
+    <article class="bug confirmed">
+      <span class="tag">BUG-001 · defeito confirmado · severidade média</span>
+      <h3>POST com JSON malformado retorna 500 e expõe o stack trace</h3>
+      <dl>
+        <dt>Passos</dt><dd><code>POST /posts</code> com o corpo <code>{ "title": "JSON sem fechamento", "userId": 1</code></dd>
+        <dt>Esperado</dt><dd>400 Bad Request, sem detalhes internos</dd>
+        <dt>Obtido</dt><dd>500 · <code>SyntaxError … at JSON.parse … /app/node_modules/body-parser/lib/types/json.js</code></dd>
+        <dt>Investigação</dt><dd>Reproduzido no Runner e em execução individual. O script foi revisado e não tem erro (CT-011, evidência 06).</dd>
+      </dl>
+    </article>
+    <article class="bug confirmed">
+      <span class="tag">BUG-002 · defeito confirmado · severidade média</span>
+      <h3>PUT em post inexistente retorna 500 e expõe o stack trace</h3>
+      <dl>
+        <dt>Passos</dt><dd><code>PUT /posts/9999</code> com title, body e userId</dd>
+        <dt>Esperado</dt><dd>404 Not Found</dd>
+        <dt>Obtido</dt><dd>500 · <code>TypeError: Cannot read properties of undefined (reading 'id') … json-server/lib/server/router/plural.js</code></dd>
+        <dt>Investigação</dt><dd><code>GET /posts/9999</code> retorna 404 corretamente, então a falha está no fluxo de atualização (CT-017, evidência 07).</dd>
+      </dl>
+    </article>
+    <article class="bug open">
+      <span class="tag">OBS-001 · possível defeito, não confirmado</span>
+      <h3>DELETE em post inexistente retorna 200</h3>
+      <dl>
+        <dt>Por que está em aberto</dt><dd>A RFC 9110 não fixa um código para esse caso: 404 é o mais comum, mas 200/204 também são aceitos por idempotência. A decisão depende de um requisito do produto (CT-019).</dd>
+      </dl>
+    </article>
+  </div>
+  <div class="limits">
+    <div><b>Limitação: sem persistência</b>O post "criado" no CT-009 (id 101) retorna 404 no CT-014. A documentação já avisa sobre isso.</div>
+    <div><b>Limitação: sem validação de entrada</b>Corpo vazio e campos vazios recebem 201 (CT-010, CT-012). Por isso, esses casos testam o comportamento documentado.</div>
+    <div><b>Melhoria sugerida</b>Tratar erros de parsing e recursos inexistentes com 4xx e mensagens genéricas, sem stack trace.</div>
+  </div>
+  <p class="hint">O arquivo <a href="https://github.com/bbmoraes/qa-api-testing-postman/tree/main/bug-reports">bug-reports/README.md</a> traz o relatório completo de cada defeito e um exemplo didático, identificado como simulação.</p>
+</section>
+
+<section id="evidencias">
+  <div class="sh"><span class="n">08</span><h2>Evidências</h2></div>
+  <p class="prose">Capturas de tela da interface do Postman feitas durante a execução, sem edição. A numeração corresponde aos arquivos da pasta <a href="https://github.com/bbmoraes/qa-api-testing-postman/tree/main/evidence/screenshots"><code>evidence/screenshots/</code></a>.</p>
+  <div class="gallery"><figure><a href="../evidence/screenshots/01-collection-portfolio-estrutura.jpg" id="ev-01-"><img loading="lazy" src="../evidence/screenshots/01-collection-portfolio-estrutura.jpg" alt="Estrutura da collection PORTFÓLIO QA, com as 5 pastas e o ambiente selecionado"></a><figcaption><span class="mono">01</span> Estrutura da collection PORTFÓLIO QA, com as 5 pastas e o ambiente selecionado</figcaption></figure><figure><a href="../evidence/screenshots/02-collection-runner-configuracao.jpg" id="ev-02-"><img loading="lazy" src="../evidence/screenshots/02-collection-runner-configuracao.jpg" alt="Configuração do Collection Runner: 21 de 21 requisições selecionadas"></a><figcaption><span class="mono">02</span> Configuração do Collection Runner: 21 de 21 requisições selecionadas</figcaption></figure><figure><a href="../evidence/screenshots/03-runner-resumo-72-testes.jpg" id="ev-03-"><img loading="lazy" src="../evidence/screenshots/03-runner-resumo-72-testes.jpg" alt="Resumo do Runner: 72 verificações, 68 aprovadas, 4 reprovadas, 0 erros"></a><figcaption><span class="mono">03</span> Resumo do Runner: 72 verificações, 68 aprovadas, 4 reprovadas, 0 erros</figcaption></figure><figure><a href="../evidence/screenshots/04-runner-filtro-falhas.jpg" id="ev-04-"><img loading="lazy" src="../evidence/screenshots/04-runner-filtro-falhas.jpg" alt="Filtro de falhas: as 4 verificações reprovadas estão em CT-011 e CT-017"></a><figcaption><span class="mono">04</span> Filtro de falhas: as 4 verificações reprovadas estão em CT-011 e CT-017</figcaption></figure><figure><a href="../evidence/screenshots/05a-runner-grid-CT001-CT010.jpg" id="ev-05a"><img loading="lazy" src="../evidence/screenshots/05a-runner-grid-CT001-CT010.jpg" alt="Visão em grade, CT-001 a CT-010"></a><figcaption><span class="mono">05a</span> Visão em grade, CT-001 a CT-010</figcaption></figure><figure><a href="../evidence/screenshots/05b-runner-grid-CT009-CT015.jpg" id="ev-05b"><img loading="lazy" src="../evidence/screenshots/05b-runner-grid-CT009-CT015.jpg" alt="Visão em grade, CT-009 a CT-015, com o CT-011 aberto"></a><figcaption><span class="mono">05b</span> Visão em grade, CT-009 a CT-015, com o CT-011 aberto</figcaption></figure><figure><a href="../evidence/screenshots/05c-runner-grid-CT015-CT021.jpg" id="ev-05c"><img loading="lazy" src="../evidence/screenshots/05c-runner-grid-CT015-CT021.jpg" alt="Visão em grade, CT-015 a CT-021, com o CT-017 aberto"></a><figcaption><span class="mono">05c</span> Visão em grade, CT-015 a CT-021, com o CT-017 aberto</figcaption></figure><figure><a href="../evidence/screenshots/06-BUG001-CT011-500-stacktrace.jpg" id="ev-06-"><img loading="lazy" src="../evidence/screenshots/06-BUG001-CT011-500-stacktrace.jpg" alt="BUG-001: o CT-011 executado individualmente retorna 500 com stack trace"></a><figcaption><span class="mono">06</span> BUG-001: o CT-011 executado individualmente retorna 500 com stack trace</figcaption></figure><figure><a href="../evidence/screenshots/07-BUG002-CT017-500-stacktrace.jpg" id="ev-07-"><img loading="lazy" src="../evidence/screenshots/07-BUG002-CT017-500-stacktrace.jpg" alt="BUG-002: o CT-017 executado individualmente retorna 500 com stack trace"></a><figcaption><span class="mono">07</span> BUG-002: o CT-017 executado individualmente retorna 500 com stack trace</figcaption></figure><figure><a href="../evidence/screenshots/08-CT001-execucao-individual-test-results.jpg" id="ev-08-"><img loading="lazy" src="../evidence/screenshots/08-CT001-execucao-individual-test-results.jpg" alt="CT-001 executado individualmente, aba Test Results"></a><figcaption><span class="mono">08</span> CT-001 executado individualmente, aba Test Results</figcaption></figure><figure><a href="../evidence/screenshots/09-runner-CT020-CT021.jpg" id="ev-09-"><img loading="lazy" src="../evidence/screenshots/09-runner-CT020-CT021.jpg" alt="Fim da lista do Runner: CT-020 e CT-021"></a><figcaption><span class="mono">09</span> Fim da lista do Runner: CT-020 e CT-021</figcaption></figure><figure><a href="../evidence/screenshots/00a-collection-estudos-CT004-script.jpg" id="ev-00a"><img loading="lazy" src="../evidence/screenshots/00a-collection-estudos-CT004-script.jpg" alt="Collection de estudos: script original do CT-004 (reaproveitado como CT-021)"></a><figcaption><span class="mono">00a</span> Collection de estudos: script original do CT-004 (reaproveitado como CT-021)</figcaption></figure><figure><a href="../evidence/screenshots/00b-collection-estudos-CT004-exemplo-201.jpg" id="ev-00b"><img loading="lazy" src="../evidence/screenshots/00b-collection-estudos-CT004-exemplo-201.jpg" alt="Collection de estudos: exemplo salvo com resposta 201 Created"></a><figcaption><span class="mono">00b</span> Collection de estudos: exemplo salvo com resposta 201 Created</figcaption></figure></div>
+</section>
+
+<section id="aprendizados">
+  <div class="sh"><span class="n">09</span><h2>Aprendizados</h2></div>
+  <ul class="learn">
+    <li><b>Um 4xx pode ser o resultado certo.</b>O que define se o teste passou é o resultado esperado, e não a cor do status. CT-002, CT-003 e CT-004 passam justamente porque recebem 404.</li>
+    <li><b>Classificar antes de reportar.</b>Defeito, limitação documentada e comportamento indefinido pedem respostas diferentes. Só 2 dos 4 comportamentos estranhos viraram bug.</li>
+    <li><b>Investigar o próprio teste primeiro.</b>Antes de culpar a API, revisei o script e reproduzi a falha de forma isolada. Também recusei a sugestão automática do Postman de ajustar a asserção, porque isso esconderia o defeito.</li>
+    <li><b>Encadear requisições revela inconsistências.</b>Com variáveis de collection, o resultado de um teste vira a entrada do próximo, como em um fluxo real de uso.</li>
+    <li><b>Documentação é parte do teste.</b>Casos, evidências e relatório permitem que outra pessoa refaça tudo e chegue ao mesmo resultado.</li>
+  </ul>
+</section>
+
+<section id="proximos">
+  <div class="sh"><span class="n">10</span><h2>Próximos passos</h2></div>
+  <ol class="next">
+    <li>Publicar o projeto no GitHub e rodar a collection com <strong>Newman</strong> pela linha de comando.</li>
+    <li>Criar um workflow no <strong>GitHub Actions</strong> que execute os testes a cada push e gere um relatório HTML.</li>
+    <li>Usar <em>data-driven testing</em> com um arquivo CSV, para rodar vários ids e payloads no mesmo caso.</li>
+    <li>Validar o schema JSON com <code>pm.response.to.have.jsonSchema</code>.</li>
+    <li>Testar uma API com autenticação por token (por exemplo, Restful-Booker).</li>
+    <li>Levar parte dos cenários para código, com Playwright API testing.</li>
+  </ol>
+</section>
+</main>
+<footer class="wrap">QA Portfolio · Bianca · projeto de estudos. Sistema testado: JSONPlaceholder, serviço público de terceiros, usado apenas para aprendizado. Nenhum dado pessoal ou sistema de produção foi utilizado. Código e documentação: <a href="https://github.com/bbmoraes/qa-api-testing-postman">github.com/bbmoraes/qa-api-testing-postman</a>.</footer>
+
+</body>
+</html>
