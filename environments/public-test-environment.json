@@ -1,0 +1,19 @@
+{
+  "id": "58cbe3d9-f2d5-4109-bbcc-acadacf86afd",
+  "name": "JSONPlaceholder | QA",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://jsonplaceholder.typicode.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "maxResponseTime",
+      "value": "3000",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
