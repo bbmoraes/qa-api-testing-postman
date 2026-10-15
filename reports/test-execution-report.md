@@ -15,6 +15,18 @@
 | Tempo médio de resposta | 335 ms |
 | Configuração | Execução funcional, em ordem; "Keep variable values" ligado, porque CT-006, CT-008 e CT-014 dependem de variáveis definidas antes |
 
+### Reexecução automática (GitHub Actions)
+
+| Item | Valor |
+|---|---|
+| Execução | [run #1](https://github.com/bbmoraes/qa-api-testing-postman/actions/runs/38781401863) · 15/10/2026 14:55:51 (horário de Brasília) |
+| Ferramenta | Postman CLI 1.74.0, runner `ubuntu-24.04` |
+| Regressão obrigatória | 19 requisições · **66 verificações · 0 falhas** |
+| Defeitos conhecidos (informativa) | CT-011 e CT-017 · 6 verificações · **4 falhas**, as mesmas da execução no Postman |
+| Evidências | [`10-ci-regressao-19-casos-66-verificacoes.jpg`](../evidence/screenshots/10-ci-regressao-19-casos-66-verificacoes.jpg) · [`11-ci-defeitos-conhecidos-CT011-CT017.jpg`](../evidence/screenshots/11-ci-defeitos-conhecidos-CT011-CT017.jpg) |
+
+O resultado bate com a execução manual: 66 + 6 = 72 verificações, com as mesmas 4 falhas.
+
 ## 2. Resultado consolidado
 
 ### Casos de teste
