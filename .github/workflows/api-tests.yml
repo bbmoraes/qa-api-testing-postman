@@ -1,0 +1,87 @@
+# Executa a collection deste projeto com o Postman CLI, usando apenas arquivos versionados
+# no repositório (collection e ambiente). Não usa chave de API do Postman nem segredos.
+name: API Tests (Postman CLI)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "collections/**"
+      - "environments/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    name: JSONPlaceholder | Postman CLI
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      COLLECTION: collections/qa-api-tests.postman_collection.json
+      ENVIRONMENT: environments/public-test-environment.json
+
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v6
+
+      - name: Instalar o Postman CLI (instalador oficial da Postman)
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/unix.sh" | sh
+          postman --version
+          mkdir -p reports
+
+      # Etapa OBRIGATÓRIA: todos os casos, exceto os dois que comprovam defeitos conhecidos
+      # (CT-011 e CT-017). A ordem respeita as dependências CT-001 → CT-006 → CT-008 e CT-009 → CT-014.
+      - name: Regressão obrigatória (19 casos)
+        run: |
+          postman collection run "$COLLECTION" -e "$ENVIRONMENT" \
+            -i "01 | Usuários - consulta" \
+            -i "02 | Posts - consulta e integração" \
+            -i "CT-009 | POST | Criar post com dados válidos" \
+            -i "CT-010 | POST | Criar post sem campos obrigatórios" \
+            -i "CT-012 | POST | Criar post com campos vazios (limite)" \
+            -i "CT-013 | POST | Criar post com título de 5.000 caracteres (limite)" \
+            -i "CT-014 | GET | Consultar post recém-criado (persistência)" \
+            -i "CT-015 | PUT | Substituir post existente" \
+            -i "CT-016 | PATCH | Atualizar somente o título de post existente" \
+            -i "CT-018 | DELETE | Excluir post existente" \
+            -i "CT-019 | DELETE | Excluir post inexistente" \
+            -i "CT-020 | POST | Usar método não suportado em recurso individual" \
+            -i "05 | Reaproveitado da collection de estudos" \
+            -r cli,junit --reporter-junit-export reports/junit-regressao.xml
+
+      # Etapa INFORMATIVA: CT-011 (BUG-001) e CT-017 (BUG-002) continuam falhando enquanto a API
+      # não mudar. A falha aparece no resumo, mas não bloqueia o workflow.
+      - name: Defeitos conhecidos BUG-001 e BUG-002 (informativo, não bloqueia)
+        id: known_defects
+        continue-on-error: true
+        run: |
+          postman collection run "$COLLECTION" -e "$ENVIRONMENT" \
+            -i "CT-011 | POST | Criar post com JSON malformado" \
+            -i "CT-017 | PUT | Substituir post inexistente" \
+            -r cli,junit --reporter-junit-export reports/junit-defeitos-conhecidos.xml
+
+      - name: Resumo da execução
+        if: always()
+        run: |
+          {
+            echo "## Resultado dos testes de API (JSONPlaceholder)"
+            echo ""
+            echo "| Etapa | Tipo | Resultado |"
+            echo "|---|---|---|"
+            echo "| Regressão obrigatória (19 casos) | bloqueia | ${{ job.status }} |"
+            echo "| Defeitos conhecidos (CT-011, CT-017) | informativa | ${{ steps.known_defects.outcome }} |"
+            echo ""
+            echo "Resultado **failure** na etapa informativa confirma que BUG-001 e BUG-002 continuam presentes."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar relatórios JUnit
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: relatorios-junit
+          path: reports/*.xml
+          if-no-files-found: warn
