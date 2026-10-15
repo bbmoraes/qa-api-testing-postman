@@ -4,6 +4,7 @@
 
 **Projeto prático de estudos e portfólio profissional** · Bianca Bueno de Moraes · QA Júnior em formação
 
+[![API Tests (Postman CLI)](https://github.com/bbmoraes/qa-api-testing-postman/actions/workflows/api-tests.yml/badge.svg)](https://github.com/bbmoraes/qa-api-testing-postman/actions/workflows/api-tests.yml)
 [![Postman](https://img.shields.io/badge/Postman-Collection_Runner-FF6C37?logo=postman&logoColor=white)](collections/qa-api-tests.postman_collection.json)
 [![JavaScript](https://img.shields.io/badge/JavaScript-pm.test_%2B_Chai-F7DF1E?logo=javascript&logoColor=black)](#8-exemplos-de-scripts-automatizados)
 [![Casos](https://img.shields.io/badge/casos-19%2F21_aprovados-2ea043)](#9-resultados-reais-das-execuções)
@@ -13,7 +14,9 @@
 
 </div>
 
-> Este é um **projeto de estudos**, não uma experiência profissional. Os testes foram executados de verdade no Postman, em 15/10/2026, e todos os números abaixo vêm dessa execução. As capturas de tela estão em [`evidence/screenshots`](evidence/screenshots).
+> Este é um **projeto de estudos**, não uma experiência profissional. Os testes foram executados de verdade no Postman, em 15/10/2026, e todos os números abaixo vêm dessa execução. Desde então, a mesma collection também roda no **GitHub Actions** a cada alteração (seção [12](#12-como-importar-e-executar-no-postman)). As capturas de tela estão em [`evidence/screenshots`](evidence/screenshots).
+>
+> **Próximo projeto:** [qa-auth-api-testing](https://github.com/bbmoraes/qa-auth-api-testing), com autenticação por token, CRUD, Data-Driven Testing e JSON Schema.
 
 ## Sumário
 
@@ -46,6 +49,7 @@ Escolhi essa API por ser gratuita, estável e documentada, e por permitir testar
 | Collection Runner | Execução da collection completa, em ordem |
 | JavaScript (`pm.test`, Chai) | Verificações automáticas em *Scripts › Post-response* e geração de dados em *Pre-request* |
 | Variáveis de collection | Encadeamento de requisições (integração) |
+| Postman CLI + GitHub Actions | Execução automática da collection a cada push e sob demanda |
 | Markdown, CSV e XLSX | Documentação, casos de teste e relatórios |
 
 ## 5. Escopo dos testes
@@ -72,6 +76,7 @@ A tabela completa, com objetivo, pré-condição, entrada, resultado esperado e 
 
 ```
 qa-api-testing-postman/
+├── .github/workflows/api-tests.yml           # execução automática (Postman CLI)
 ├── README.md
 ├── collections/
 │   └── qa-api-tests.postman_collection.json   # 21 requisições + scripts comentados
@@ -85,7 +90,7 @@ qa-api-testing-postman/
 ├── reports/
 │   └── test-execution-report.md
 ├── evidence/
-│   └── screenshots/                            # 13 capturas de tela do Postman
+│   └── screenshots/                            # 15 capturas (Postman e GitHub Actions)
 ├── portfolio/
 │   └── index.html                              # versão visual (GitHub Pages)
 └── .gitignore
@@ -186,6 +191,8 @@ As 72 verificações são as 51 escritas nas requisições mais 21 verificaçõe
 | CT-020 | POST · Usar método não suportado em recurso individual | 404 | 2/2 | ✅ Aprovado |
 | CT-021 | POST · Cadastrar usuário válido (meu primeiro teste, reexecutado) | 201 | 4/4 | ✅ Aprovado |
 
+**Reexecução automática no GitHub Actions** ([run #1](https://github.com/bbmoraes/qa-api-testing-postman/actions/runs/38781401863), 15/10/2026 14:55): a regressão obrigatória (19 casos, 66 verificações) passou sem falhas. A etapa informativa com CT-011 e CT-017 reprovou 4 de 6 verificações, confirmando que os dois defeitos continuam presentes.
+
 Relatório completo: [`reports/test-execution-report.md`](reports/test-execution-report.md).
 
 ## 10. Evidências
@@ -216,13 +223,21 @@ Os dois defeitos foram reproduzidos no Runner e em execução individual. Os scr
 3. No seletor de ambiente (canto superior direito), escolha **`JSONPlaceholder | QA`**.
 4. Abra a collection **PORTFÓLIO QA | Testes de API REST** → **Run** → mantenha a ordem padrão → **Start run**.
 
-Pela linha de comando, com [Newman](https://www.npmjs.com/package/newman):
+Pela linha de comando, com o [Postman CLI](https://learning.postman.com/docs/postman-cli/postman-cli-installation/), que roda o arquivo local sem precisar de login:
 
 ```bash
-npm install -g newman
-newman run collections/qa-api-tests.postman_collection.json \
+postman collection run collections/qa-api-tests.postman_collection.json \
   -e environments/public-test-environment.json
 ```
+
+**Pelo GitHub Actions:** o [workflow](.github/workflows/api-tests.yml) roda a cada push que altera a collection, o ambiente ou o próprio workflow, e também pelo botão **Run workflow** na aba [Actions](https://github.com/bbmoraes/qa-api-testing-postman/actions). Ele tem duas etapas:
+
+| Etapa | Tipo | O que roda |
+|---|---|---|
+| Regressão obrigatória | bloqueia o workflow | 19 casos (todos, exceto CT-011 e CT-017) |
+| Defeitos conhecidos | informativa (`continue-on-error`) | CT-011 e CT-017, que comprovam BUG-001 e BUG-002 |
+
+Assim, o selo fica verde enquanto a regressão passa, e os defeitos continuam visíveis no resumo de cada execução, sem serem escondidos.
 
 > Os casos dependem da ordem de execução (CT-001 → CT-006 → CT-008 e CT-009 → CT-014). Enquanto o comportamento da API não mudar, o CT-011 e o CT-017 continuam reprovando. Os tempos de resposta variam a cada execução.
 
@@ -236,10 +251,9 @@ newman run collections/qa-api-tests.postman_collection.json \
 
 ## 14. Melhorias futuras
 
-- [ ] Rodar a collection com Newman em um workflow do **GitHub Actions** a cada push, com relatório HTML (`newman-reporter-htmlextra`).
-- [ ] *Data-driven testing* com arquivo CSV de ids e payloads.
-- [ ] Validação de schema com `pm.response.to.have.jsonSchema`.
-- [ ] Testar uma API com autenticação por token (por exemplo, Restful-Booker).
+- [x] Executar a collection no **GitHub Actions** a cada push, com o Postman CLI e relatórios JUnit (feito neste repositório).
+- [x] *Data-driven testing*, validação de schema e autenticação por token: feitos no [projeto 02](https://github.com/bbmoraes/qa-auth-api-testing).
+- [ ] Um projeto de **testes manuais** com casos de teste, checklist e bug reports de uma aplicação web.
 - [ ] Levar parte dos cenários para código, com Playwright API testing.
 
 ---
